@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>mbank-dotnet.testapp</AssemblyName>
+    <RootNamespace>ib.mbank.testapp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\mbank-dotnet\mbank-dotnet.csproj" />
+  </ItemGroup>
+
+</Project>
