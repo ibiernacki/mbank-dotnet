@@ -20,11 +20,19 @@ namespace ib.mbank
         public static readonly string DefaultBaseAddress = "https://online.mbank.pl/pl";
         private static string _tokenParameterName = "X-Request-Verification-Token";
         private static string _tabIdParameterName = "X-Tab-Id";
+        public CookieContainer CookieContainer {
+            get 
+            {
+                return Client.CookieContainer;
+            }
+            set {
+                Client.CookieContainer = value;
+            }
+        }
 
         public MbankClient()
         {
             Client = new RestClient(DefaultBaseAddress);
-            Client.CookieContainer = new CookieContainer();
 
         }
 
