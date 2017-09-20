@@ -11,6 +11,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using ib.mbank.Serialization;
 
 namespace ib.mbank
 {
@@ -20,20 +21,13 @@ namespace ib.mbank
         public static readonly string DefaultBaseAddress = "https://online.mbank.pl/pl";
         private static string _tokenParameterName = "X-Request-Verification-Token";
         private static string _tabIdParameterName = "X-Tab-Id";
-        public CookieContainer CookieContainer {
-            get 
-            {
-                return Client.CookieContainer;
-            }
-            set {
-                Client.CookieContainer = value;
-            }
-        }
 
         public MbankClient()
         {
-            Client = new RestClient(DefaultBaseAddress);
-
+            Client = new RestClient(DefaultBaseAddress)
+            {
+                CookieContainer = new CookieContainer()
+            };
         }
 
         public async Task<IMbankResponse<AccountInfo>> GetAccountInfo() => await GetAccountInfo(default(CancellationToken));
@@ -107,7 +101,7 @@ namespace ib.mbank
                 return MbankResponse<LoginInfo>.Failed(loginResponse);
 
             var loginInfo = JsonConvert.DeserializeObject<LoginInfo>(loginResponse.Content,
-                new JsonSerializerSettings()
+                new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
@@ -152,6 +146,47 @@ namespace ib.mbank
                 return MbankResponse<LoginInfo>.Failed(activateAccountResponse);
 
             return new MbankResponse<LoginInfo>(tokenResponse, true, loginInfo);
+        }
+
+        public string GetSessionState()
+        {
+            var defaultParameters = Client.DefaultParameters;
+            var tabIdParameter = defaultParameters.FirstOrDefault(p => p.Name == _tabIdParameterName);
+            var tokenParameter = defaultParameters.FirstOrDefault(p => p.Name == _tokenParameterName);
+
+            if (tokenParameter == null || tabIdParameter == null)
+            {
+                return null;
+            }
+
+            var sessionState = new MBankSessionState
+            {
+                CookieContainer = Client.CookieContainer,
+                TabId = tabIdParameter.Value.ToString(),
+                VerificationToken = tokenParameter.Value.ToString(),
+                BaseUri = Client.BaseUrl
+            };
+            return sessionState.ToBase64String();
+        }
+
+        public bool SetSessionState(string serializedSessionState)
+        {
+            try
+            {
+                var sessionState = SerializationHelpers.FromBase64String<MBankSessionState>(serializedSessionState);
+
+                Client.RemoveDefaultParameter(_tabIdParameterName);
+                Client.RemoveDefaultParameter(_tokenParameterName);
+                Client.AddDefaultParameter(_tabIdParameterName, sessionState.TabId, ParameterType.HttpHeader);
+                Client.AddDefaultParameter(_tokenParameterName, sessionState.VerificationToken, ParameterType.HttpHeader);
+                Client.CookieContainer = sessionState.CookieContainer;
+                Client.BaseUrl = sessionState.BaseUri;
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
     }
 }
