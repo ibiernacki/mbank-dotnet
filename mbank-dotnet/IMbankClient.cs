@@ -49,5 +49,9 @@ namespace ib.mbank
         /// <exception cref="InvalidOperationException">User is not authenticated. Use Login method first</exception>
         /// </summary>
         Task<IMbankResponse<IList<Transaction>>> GetTransactions(CancellationToken cancellationToken);
+
+        string GetSessionState();
+        bool SetSessionState(string serializedSessionState);
+        Task<bool> IsLoggedIn(CancellationToken cancellationToken = default(CancellationToken));
     }
 }
