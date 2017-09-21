@@ -53,6 +53,24 @@ namespace ib.mbank
             return new MbankResponse<AccountInfo>(accountsListResponse, true, accountInfo);
         }
 
+        public async Task<bool> IsLoggedIn(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            try
+            {
+                // execute some request to check if user is logged in
+                var postRequest = new RestRequest("/Adv/AdvPlaceholder/GetUpdates", Method.POST);
+                postRequest.AddHeader("X-Requested-With","XMLHttpRequest");
+                postRequest.AddHeader("ContentType","application/json");
+                var response = await Client.ExecuteTaskAsync(postRequest, cancellationToken);
+                var json = JsonConvert.DeserializeObject(response.Content);
+
+                return json != null;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
         public async Task<IMbankResponse<IList<Transaction>>> GetTransactions() => await GetTransactions(default(CancellationToken));
         public async Task<IMbankResponse<IList<Transaction>>> GetTransactions(CancellationToken cancellationToken)
         {
@@ -90,6 +108,7 @@ namespace ib.mbank
         public async Task<IMbankResponse<LoginInfo>> Login(string login, string password, AccountType accountType) => await Login(login, password, accountType, default(CancellationToken));
         public async Task<IMbankResponse<LoginInfo>> Login(string login, string password, AccountType accountType, CancellationToken cancellationToken)
         {
+            Client.DefaultParameters.Clear();
             var loginRequest = new RestRequest("/Account/JsonLogin", Method.POST);
             loginRequest.AddParameter("UserName", login, ParameterType.QueryString);
             loginRequest.AddParameter("Password", password, ParameterType.QueryString);

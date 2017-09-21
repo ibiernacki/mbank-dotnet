@@ -52,5 +52,6 @@ namespace ib.mbank
 
         string GetSessionState();
         bool SetSessionState(string serializedSessionState);
+        Task<bool> IsLoggedIn(CancellationToken cancellationToken = default(CancellationToken));
     }
 }
