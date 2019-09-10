@@ -110,10 +110,27 @@ namespace ib.mbank
         {
             Client.DefaultParameters.Clear();
             var loginRequest = new RestRequest("/Account/JsonLogin", Method.POST);
-            loginRequest.AddParameter("UserName", login, ParameterType.QueryString);
-            loginRequest.AddParameter("Password", password, ParameterType.QueryString);
-            loginRequest.AddParameter("Seed", "", ParameterType.QueryString);
-            loginRequest.AddParameter("Lang", "", ParameterType.QueryString);
+            loginRequest.AddJsonBody(new
+            {
+                UserName = login,
+                Password = password,
+                Scenario = "Default",
+                Seed = string.Empty,
+                Lang = string.Empty,
+                HrefHasHash = false,
+                DfpData = new
+                {
+                    dfp = (string)null,
+                    errorMessage = (string)null,
+                    scaOperationId = (string)null
+                },
+                UWAdditionalParams = new
+                {
+                    InOut = (string)null,
+                    ReturnAddress = (string)null,
+                    Source = (string)null
+                }
+            });
             var loginResponse = await Client.ExecuteTaskAsync(loginRequest, cancellationToken);
 
             if (loginResponse.StatusCode != HttpStatusCode.OK)
